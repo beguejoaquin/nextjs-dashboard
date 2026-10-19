@@ -1,19 +1,19 @@
-import { z } from "zod";
-
 export type Product = {
   id: string;
   name: string;
   price_in_cents: number;
   category: string;
+  owner: User;
 };
 
 export type ProductVariant = {
   id: string;
   name: string;
-  product_id: string;
+  product: Product;
   stock: number;
   active: boolean;
   image_url: string;
+  owner: User;
 };
 
 export type DailyRegistry = {
@@ -21,6 +21,7 @@ export type DailyRegistry = {
   initial_cash_in_cents: number;
   current_cash_in_cents: number;
   date: string;
+  owner: User;
 };
 
 export type Transaction = {
@@ -30,20 +31,24 @@ export type Transaction = {
   description: string;
   payment_method: "cash" | "card";
   timestamp: string;
-  registry_id: string;
+  registry: DailyRegistry;
+  owner: User;
 };
 
 export type Sale = {
   id: string;
-  transaction_id: string;
+  transaction: Transaction;
+  items: SaleItem[];
+  owner: User;
 };
 
 export type SaleItem = {
   id: string;
-  sale_id: string;
-  product_variant_id: string;
+  sale: Sale;
+  product_variant: ProductVariant;
   quantity: number;
   unitary_price_in_cents: number;
+  owner: User;
 };
 
 export type User = {

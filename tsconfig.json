@@ -22,6 +22,7 @@
     "paths": {
       "@/*": ["./*"]
     },
+    "ignoreDeprecations": "6.0",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
