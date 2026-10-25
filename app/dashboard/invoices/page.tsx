@@ -7,6 +7,8 @@ import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 import { fetchInvoicesPages } from "@/app/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
@@ -20,17 +22,17 @@ export default async function Page(props: {
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-between">
+      <div className="flex justify-between items-center w-full">
         <h1 className={`${lusitana.className} text-2xl`}>Invoices</h1>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+      <div className="flex justify-between items-center gap-2 mt-4 md:mt-8">
         <Search placeholder="Search invoices..." />
         <CreateInvoice />
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
         <Table query={query} currentPage={currentPage} />
       </Suspense>
-      <div className="mt-5 flex w-full justify-center">
+      <div className="flex justify-center mt-5 w-full">
         <Pagination totalPages={totalPages} />
       </div>
     </div>

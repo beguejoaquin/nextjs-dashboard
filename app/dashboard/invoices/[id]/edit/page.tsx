@@ -4,6 +4,8 @@ import { fetchCustomers } from "@/app/lib/data";
 import { fetchInvoiceById } from "@/app/lib/data";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page(props: {
   params: Promise<{
     id: string;
