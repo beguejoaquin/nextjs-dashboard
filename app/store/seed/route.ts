@@ -2,76 +2,68 @@ import postgres from "postgres";
 import bcrypt from "bcrypt";
 
 import {
-  storeUsers,
+  users,
   products,
-  variantNames,
-  transactions,
+  productVariants,
   dailyRegistries,
+  transactions,
+  sales,
+  saleItems,
 } from "@/app/store/lib/place-holder-data";
+import { Datatype } from "next/font/google";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-async function getStoreUser(db: typeof sql) {
-  const user = await db`SELECT * FROM store_users LIMIT 1;`;
-  return user[0];
-}
+const dataTables = [
+  {
+    table: "users",
+    data: users,
+  },
+  {
+    table: "products",
+    data: products,
+  },
+  {
+    table: "product_variants",
+    data: productVariants,
+  },
+  {
+    table: "daily_registries",
+    data: dailyRegistries,
+  },
+  {
+    table: "transactions",
+    data: transactions,
+  },
+  {
+    table: "sales",
+    data: sales,
+  },
+  {
+    table: "sale_items",
+    data: saleItems,
+  },
+];
 
-async function seedStoreUsers(db: typeof sql) {
-  const insertedUsers = await Promise.all(
-    storeUsers.map(async (user) => {
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      return db`--sql
-        INSERT INTO store_users (first_name, last_name, email, company_name, password)
-        VALUES (${user.first_name}, ${user.last_name}, ${user.email}, ${user.company_name}, ${hashedPassword})
-        ON CONFLICT (email) DO NOTHING;
-      `;
-    }),
-  );
-  return insertedUsers;
-}
+async function insertData(
+  db: typeof sql,
+  table: string,
+  data: object[],
+  reseed: boolean = false,
+) {
+  // If no reseed, return if the table is already seeded
+  let rows = await db`SELECT COUNT(*) FROM ${db(table)}`;
+  if (reseed == false && rows) return `Table ${table} already seeded.`;
 
-async function seedProducts(db: typeof sql) {
-  const user = await getStoreUser(db);
-
-  if (!user) return "User not found";
-
-  const insertedProducts = await Promise.all(
-    products.map(async (product) => {
-      return db`--sql
-        INSERT INTO products (name, price_in_cents, category, owner_id)
-        VALUES (${product.name}, ${product.price_in_cents}, ${product.category}, ${user.id});
-      `;
-    }),
-  );
-  return insertedProducts;
-}
-
-async function seedProductVariants(db: typeof sql) {
-  const products = await db`SELECT id, name FROM products;`;
-
-  const productVariants = [
-    ...products.flatMap((product, productIndex) =>
-      variantNames[productIndex].map((name, variantIndex) => {
-        return {
-          name,
-          product_id: product.id,
-          stock: 10,
-          active: true,
-          owner_id: product.owner_id,
-        };
-      }),
-    ),
-  ];
-
-  const insertedProducts = await Promise.all(
-    products.map(async (product) => {
-      return db`--sql
-        INSERT INTO products (name, price_in_cents, category, owner_id)
-        VALUES (${product.name}, ${product.price_in_cents}, ${product.category}, ${product.owner_id});
-      `;
-    }),
-  );
-  return insertedProducts;
+  // Insert data
+  try {
+    data.forEach(async (row) => {
+      await db`INSERT INTO ${db(table)} ${db(row)}`;
+    });
+    return `Table ${table} seeded successfully`;
+  } catch (error) {
+    return `Error seeding ${table}: ${error}`;
+  }
 }
 
 export async function GET() {
@@ -79,12 +71,17 @@ export async function GET() {
     const result = await sql.begin(async (tx) => {
       await tx`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-      return await seedStoreUsers(tx);
+      return dataTables.forEach(async (dataTable) => {
+        return await insertData(tx, dataTable.table, dataTable.data);
+      });
+
+      return;
     });
 
-    const message = result ? result : "Database seeded successfully";
-
-    return Response.json({ message: message });
+    return Response.json({
+      data: result,
+      message: "Database seeded successfully",
+    });
   } catch (error) {
     return Response.json({ error }, { status: 500 });
   }

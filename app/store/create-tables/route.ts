@@ -50,7 +50,7 @@ async function createDailyRegistriesTable(db: typeof sql) {
       initial_cash_in_cents INT NOT NULL,
       current_cash_in_cents INT NOT NULL,
       owner_id UUID NOT NULL,
-      date DATE NOT NULL,
+      date DATE NOT NULL DEFAULT CURRENT_DATE,
       FOREIGN KEY (owner_id) REFERENCES store_users(id)
     );
   `;
@@ -64,7 +64,7 @@ async function createTransactionsTable(db: typeof sql) {
       amount_in_cents INT NOT NULL,
       description VARCHAR(255),
       payment_method VARCHAR(10) NOT NULL,
-      timestamp TIMESTAMPTZ NOT NULL,
+      timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
       registry_id UUID NOT NULL,
       owner_id UUID NOT NULL,
       FOREIGN KEY (registry_id) REFERENCES daily_registries(id),
